@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Shortener</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #f3f4f6;
+        }
+
+        .container {
+            background: white;
+            width: 450px;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            background: #2563eb;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        .result {
+            margin-top: 25px;
+            padding: 15px;
+            background: #f9fafb;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .result a {
+            color: #2563eb;
+            word-break: break-all;
+        }
+
+        .stats {
+            margin-top: 15px;
+            color: #374151;
+        }
+
+        .error {
+            color: red;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>URL Shortener</h1>
+
+    <input
+            id="urlInput"
+            type="url"
+            placeholder="Введите длинную ссылку..."
+    >
+
+    <button onclick="shortenUrl()">
+        Сократить
+    </button>
+
+
+    <div class="result" id="result">
+
+        <h3>Короткая ссылка:</h3>
+
+        <a
+                id="shortLink"
+                href="#"
+                target="_blank">
+        </a>
+
+        <div class="stats" id="stats">
+        </div>
+
+    </div>
+
+
+    <div class="error" id="error"></div>
+
+</div>
+
+
+<script>
+
+    const API = "http://localhost:8080/api/links";
+
+
+    async function shortenUrl() {
+
+        const input = document.getElementById("urlInput");
+        const error = document.getElementById("error");
+
+        error.textContent = "";
+
+        const originalUrl = input.value.trim();
+
+
+        if (!originalUrl) {
+            error.textContent = "Введите ссылку";
+            return;
+        }
+
+
+        try {
+
+            const response = await fetch(API, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    originalUrl: originalUrl
+                })
+            });
+
+
+            if (!response.ok) {
+                throw new Error("Ошибка создания ссылки");
+            }
+
+
+            const data = await response.json();
+
+
+            /*
+                Ожидаемый ответ backend:
+
+                {
+                    "shortCode": "abc123",
+                    "shortUrl": "http://localhost:8080/abc123"
+                }
+            */
+
+
+            const shortUrl = data.shortUrl
+                || `http://localhost:8080/${data.shortCode}`;
+
+
+            const shortCode = data.shortCode;
+
+
+            const link = document.getElementById("shortLink");
+            const result = document.getElementById("result");
+
+
+            link.textContent = shortUrl;
+            link.href = shortUrl;
+
+
+            result.style.display = "block";
+
+
+            loadStats(shortCode);
+
+
+        } catch (e) {
+
+            error.textContent = e.message;
+
+        }
+
+    }
+
+
+
+    async function loadStats(shortCode) {
+
+
+        if (!shortCode) {
+            return;
+        }
+
+
+        try {
+
+            const response = await fetch(
+                `${API}/${shortCode}/stats`
+            );
+
+
+            if (!response.ok) {
+                throw new Error();
+            }
+
+
+            const stats = await response.json();
+
+            document.getElementById("stats").innerHTML =
+                `
+            <p>Клики: ${stats.clicks}</p>
+            <p>Создано: ${stats.createdAt ?? "-"}</p>
+            `;
+
+
+        } catch {
+
+            document.getElementById("stats").textContent =
+                "Не удалось загрузить статистику";
+
+        }
+
+    }
+
+
+</script>
+
+</body>
+</html>

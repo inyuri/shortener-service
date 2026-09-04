@@ -1,0 +1,43 @@
+spring:
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/shortener}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:secret}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    drop-first: true
+    clear-checksums: true
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+
+server:
+  port: ${SERVER_PORT:8080}
+
+rate-limit:
+  max-requests: ${RATE_LIMIT_MAX_REQUESTS:10}
+  window-seconds: ${RATE_LIMIT_WINDOW_SECONDS:60}
+
+kafka:
+  topics:
+    link-clicks: ${KAFKA_TOPIC_LINK_CLICKS:link-clicks}
+
+analytics:
+  service:
+    url: ${ANALYTICS_SERVICE_URL:http://localhost:8081}
