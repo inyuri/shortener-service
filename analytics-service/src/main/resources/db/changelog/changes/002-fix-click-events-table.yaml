@@ -1,0 +1,48 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-create-click-events-if-missing
+      author: timofey
+      preConditions:
+        - onFail: MARK_RAN
+          not:
+            - tableExists:
+                tableName: click_events
+      changes:
+        - createTable:
+            tableName: click_events
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: short_code
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: original_url
+                  type: TEXT
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: clicked_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: user_agent
+                  type: TEXT
+
+              - column:
+                  name: correlation_id
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false

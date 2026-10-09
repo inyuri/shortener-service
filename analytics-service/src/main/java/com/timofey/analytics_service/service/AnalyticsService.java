@@ -5,15 +5,17 @@ import com.timofey.analytics_service.entity.ClickEvent;
 import com.timofey.analytics_service.event.LinkClickedEvent;
 import com.timofey.analytics_service.repository.ClickEventRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AnalyticsService {
 
     private final ClickEventRepository clickEventRepository;
@@ -22,15 +24,28 @@ public class AnalyticsService {
     private String dltTopic;
 
     public void process(LinkClickedEvent event) {
-        ClickEvent clickEvent = new ClickEvent(
-                event.shortCode(),
-                event.originalUrl(),
-                event.clickedAt(),
-                event.userAgent(),
-                event.correlationUUID()
-        );
+        String correlationId = event.correlationId();
 
-        clickEventRepository.save(clickEvent);
+        if (correlationId == null || correlationId.isBlank()) {
+            MDC.put("correlationId", correlationId);
+        }
+
+        try {
+            ClickEvent clickEvent = new ClickEvent(
+                    event.shortCode(),
+                    event.originalUrl(),
+                    event.clickedAt(),
+                    event.userAgent(),
+                    event.correlationId()
+            );
+
+            clickEventRepository.save(clickEvent);
+
+            log.info("Click event saved for shortCode={}", event.shortCode());
+        }
+        finally {
+            MDC.clear();
+        }
     }
 
     public AnalyticsResponse getAnalytics(String shortCode) {

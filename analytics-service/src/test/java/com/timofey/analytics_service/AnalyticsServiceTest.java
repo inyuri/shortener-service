@@ -13,11 +13,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-
 
 @ExtendWith(MockitoExtension.class)
 class AnalyticsServiceTest {
@@ -30,57 +28,45 @@ class AnalyticsServiceTest {
 
 	@Test
 	void process_savesEventToRepository() {
-		LinkClickedEvent event =
-				new LinkClickedEvent(
-						"abc123",
-						"https://google.com",
-						LocalDateTime.now(),
-						"Chrome",
-						UUID.randomUUID()
-				);
+		LinkClickedEvent event = new LinkClickedEvent(
+				"abc123",
+				"https://google.com",
+				LocalDateTime.now(),
+				"Chrome",
+				"test-correlation-id-1"
+		);
 
 		analyticsService.process(event);
 
 		ArgumentCaptor<ClickEvent> captor =
 				ArgumentCaptor.forClass(ClickEvent.class);
 
-		verify(clickEventRepository)
-				.save(captor.capture());
+		verify(clickEventRepository).save(captor.capture());
 
-		ClickEvent saved =
-				captor.getValue();
+		ClickEvent saved = captor.getValue();
 
-		assertEquals(
-				"abc123",
-				saved.getShortCode()
-		);
-
-		assertEquals(
-				"https://google.com",
-				saved.getOriginalUrl()
-		);
+		assertEquals("abc123", saved.getShortCode());
+		assertEquals("https://google.com", saved.getOriginalUrl());
+		assertEquals("test-correlation-id-1", saved.getCorrelationId());
 	}
 
 	@Test
 	void process_twoEventsWithSameShortCode_savesBothEvents() {
+		LinkClickedEvent first = new LinkClickedEvent(
+				"abc123",
+				"https://google.com",
+				LocalDateTime.now(),
+				"Chrome",
+				"test-correlation-id-2"
+		);
 
-		LinkClickedEvent first =
-				new LinkClickedEvent(
-						"abc123",
-						"https://google.com",
-						LocalDateTime.now(),
-						"Chrome",
-						UUID.randomUUID()
-				);
-
-		LinkClickedEvent second =
-				new LinkClickedEvent(
-						"abc123",
-						"https://google.com",
-						LocalDateTime.now(),
-						"Firefox",
-						UUID.randomUUID()
-				);
+		LinkClickedEvent second = new LinkClickedEvent(
+				"abc123",
+				"https://google.com",
+				LocalDateTime.now(),
+				"Firefox",
+				"test-correlation-id-3"
+		);
 
 		analyticsService.process(first);
 		analyticsService.process(second);
@@ -91,30 +77,19 @@ class AnalyticsServiceTest {
 
 	@Test
 	void getAnalytics_returnsClickCounts() {
-		when(clickEventRepository.countByShortCode("abc123")).thenReturn(10);
+		when(clickEventRepository.countByShortCode("abc123"))
+				.thenReturn(10);
 
 		when(clickEventRepository.countTodayClicks(
-						eq("abc123"),
-						any(LocalDateTime.class)
-				)
-		).thenReturn(3);
+				eq("abc123"),
+				any(LocalDateTime.class)
+		)).thenReturn(3);
 
 		AnalyticsResponse response =
 				analyticsService.getAnalytics("abc123");
 
-		assertEquals(
-				"abc123",
-				response.getShortCode()
-		);
-
-		assertEquals(
-				10,
-				response.getTotalClicks()
-		);
-
-		assertEquals(
-				3,
-				response.getTodayClicks()
-		);
+		assertEquals("abc123", response.getShortCode());
+		assertEquals(10, response.getTotalClicks());
+		assertEquals(3, response.getTodayClicks());
 	}
 }

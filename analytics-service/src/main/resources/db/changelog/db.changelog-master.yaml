@@ -1,3 +1,7 @@
 databaseChangeLog:
   - include:
       file: db/changelog/changes/001-create-click-events-table.yaml
+  - include:
+      file: db/changelog/changes/002-fix-click-events-table.yaml
+  - include:
+      file: db/changelog/changes/003-fix-correlation-id.yaml

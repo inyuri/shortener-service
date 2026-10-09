@@ -9,6 +9,7 @@ import com.timofey.shortener_service.model.Link;
 import com.timofey.shortener_service.repository.LinkRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -66,12 +67,14 @@ public class LinkService {
         link.setClicks(link.getClicks() + 1);
         linkRepository.save(link);
 
+        String correlationId = MDC.get("correlationId");
+
         LinkClickedEvent event = new LinkClickedEvent(
                 link.getShortCode(),
                 link.getOriginalUrl(),
                 LocalDateTime.now(),
                 userAgent,
-                UUID.randomUUID()
+                correlationId
         );
 
         kafkaTemplate.send(

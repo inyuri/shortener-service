@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-fix-correlation-id
+      author: timofey
+      changes:
+        - renameColumn:
+            tableName: click_events
+            oldColumnName: correlation_uuid
+            newColumnName: correlation_id
+            columnDataType: UUID
+        - modifyDataType:
+            tableName: click_events
+            columnName: correlation_id
+            newDataType: VARCHAR(255)

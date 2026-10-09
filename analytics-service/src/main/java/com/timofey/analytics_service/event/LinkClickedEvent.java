@@ -8,6 +8,6 @@ public record LinkClickedEvent(
         String originalUrl,
         LocalDateTime clickedAt,
         String userAgent,
-        UUID correlationUUID
+        String correlationId
 ) {
 }
