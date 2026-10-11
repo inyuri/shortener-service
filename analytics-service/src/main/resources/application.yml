@@ -36,3 +36,12 @@ kafka:
   topics:
     link-clicks: ${KAFKA_TOPIC_LINK_CLICKS:link-clicks}
     link-clicks-dlt: link-clicks.DLT
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized

@@ -31,7 +31,7 @@ public class ClickEvent {
     @Column(name = "user_agent")
     private String userAgent;
 
-    @Column(name = "correlation_uuid", nullable = false)
+    @Column(name = "correlation_id", nullable = false)
     private String correlationId;
 
     public ClickEvent(

@@ -13,11 +13,12 @@ public class ClickEventConsumer {
 
     private final AnalyticsService analyticsService;
 
-    @KafkaListener(topics = "${kafka.topics.link-clicks}",
-    containerFactory = "kafkaListenerContainerFactory")
+    @KafkaListener(
+            topics = "docker compose ps -a${kafka.topics.link-clicks}",
+            containerFactory = "kafkaListenerContainerFactory"
+    )
     public void consume(LinkClickedEvent event) {
-        throw new RuntimeException("test");
-        // analyticsService.process(event);
+        analyticsService.process(event);
     }
 
 }

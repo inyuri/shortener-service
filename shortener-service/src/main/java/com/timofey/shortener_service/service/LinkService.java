@@ -7,6 +7,7 @@ import com.timofey.shortener_service.exception.LinkExpiredException;
 import com.timofey.shortener_service.exception.LinkNotFoundException;
 import com.timofey.shortener_service.model.Link;
 import com.timofey.shortener_service.repository.LinkRepository;
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
@@ -30,6 +31,7 @@ public class LinkService {
     private final LinkRepository linkRepository;
     private final KafkaTemplate<String, LinkClickedEvent> kafkaTemplate;
     private final WebClient analyticsWebClient;
+    private final MeterRegistry meterRegistry;
 
     @Value("${kafka.topics.link-clicks}")
     private String linkClickedTopic;
@@ -49,6 +51,13 @@ public class LinkService {
         Link link = new Link(shortCode, originalUrl, 0, expiresAt);
         Link savedLink = linkRepository.save(link);
 
+        var counter = meterRegistry.counter("links.created");
+        counter.increment();
+
+        log.info("Created metric name={}, count={}",
+                counter.getId().getName(),
+                counter.count());
+
         return Map.of(
                 "shortCode", savedLink.getShortCode(),
                 "shortUrl", baseUrl + "/" + savedLink.getShortCode()
@@ -66,6 +75,8 @@ public class LinkService {
 
         link.setClicks(link.getClicks() + 1);
         linkRepository.save(link);
+
+        meterRegistry.counter("links.clicks").increment();
 
         String correlationId = MDC.get("correlationId");
 
