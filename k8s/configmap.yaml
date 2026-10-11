@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: shortener-config
+data:
+  SPRING_DATASOURCE_URL: "jdbc:postgresql://host.minikube.internal:5432/shortener"
+  REDIS_HOST: "host.minikube.internal"
+  REDIS_PORT: "6379"
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: "host.minikube.internal:29092"
+  KAFKA_TOPIC_LINK_CLICKS: "link-clicks"
+  ANALYTICS_SERVICE_URL: "http://analytics-service:8080"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: analytics-config
+data:
+  SPRING_DATASOURCE_URL: "jdbc:postgresql://host.minikube.internal:5432/shortener"
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: "host.minikube.internal:9092"
+  KAFKA_TOPIC_LINK_CLICKS: "link-clicks"
