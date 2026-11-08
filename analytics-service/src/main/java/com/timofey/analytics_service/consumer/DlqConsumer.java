@@ -4,6 +4,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -17,8 +18,8 @@ public class DlqConsumer {
             topics = "${kafka.topics.link-clicks-dlt}",
             groupId = "analytics-dlq-group"
     )
-    public void consume(ConsumerRecord<String, Object> record) {
-        String msg = record.value() != null ? record.value().toString() : "empty";
+    public void consume(ConsumerRecord<String, byte[]> record) {
+        String msg = record.value() != null ? new String(record.value(), StandardCharsets.UTF_8) : "empty";
         failedEvents.add(msg);
     }
 

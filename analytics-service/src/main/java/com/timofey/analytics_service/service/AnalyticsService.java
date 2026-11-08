@@ -5,11 +5,11 @@ import com.timofey.analytics_service.entity.ClickEvent;
 import com.timofey.analytics_service.event.LinkClickedEvent;
 import com.timofey.analytics_service.repository.ClickEventRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
@@ -23,10 +23,15 @@ public class AnalyticsService {
     @Value("${kafka.topics.link-clicks-dlt}")
     private String dltTopic;
 
+    @Transactional
     public void process(LinkClickedEvent event) {
-        String correlationId = event.correlationId();
+        var eventId = event.eventId();
+        if (eventId != null && clickEventRepository.existsByEventId(eventId)) {
+            return;
+        }
 
-        if (correlationId == null || correlationId.isBlank()) {
+        String correlationId = event.correlationId();
+        if (correlationId != null && !correlationId.isBlank()) {
             MDC.put("correlationId", correlationId);
         }
 
@@ -36,14 +41,13 @@ public class AnalyticsService {
                     event.originalUrl(),
                     event.clickedAt(),
                     event.userAgent(),
-                    event.correlationId()
+                    correlationId,
+                    eventId
             );
 
             clickEventRepository.save(clickEvent);
-
             log.info("Click event saved for shortCode={}", event.shortCode());
-        }
-        finally {
+        } finally {
             MDC.clear();
         }
     }

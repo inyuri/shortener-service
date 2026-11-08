@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-add-click-event-id
+      author: timofey
+      changes:
+        - addColumn:
+            tableName: click_events
+            columns:
+              - column:
+                  name: event_id
+                  type: UUID
+        - addUniqueConstraint:
+            tableName: click_events
+            columnNames: event_id
+            constraintName: uq_click_events_event_id

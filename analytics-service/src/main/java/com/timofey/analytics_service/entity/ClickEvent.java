@@ -34,17 +34,22 @@ public class ClickEvent {
     @Column(name = "correlation_id", nullable = false)
     private String correlationId;
 
+    @Column(name = "event_id")
+    private UUID eventId;
+
     public ClickEvent(
             String shortCode,
             String originalUrl,
             LocalDateTime clickedAt,
             String userAgent,
-            String correlationId
+            String correlationId,
+            UUID eventId
     ) {
         this.shortCode = shortCode;
         this.originalUrl = originalUrl;
         this.clickedAt = clickedAt;
         this.userAgent = userAgent;
         this.correlationId = correlationId;
+        this.eventId = eventId;
     }
 }

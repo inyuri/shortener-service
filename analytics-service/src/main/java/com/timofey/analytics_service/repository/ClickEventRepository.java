@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Repository
 public interface ClickEventRepository extends JpaRepository<ClickEvent, Long> {
@@ -22,4 +23,6 @@ public interface ClickEventRepository extends JpaRepository<ClickEvent, Long> {
             @Param("shortCode") String shortCode,
             @Param("startOfDay") LocalDateTime startOfDay
     );
+
+    boolean existsByEventId(UUID eventId);
 }

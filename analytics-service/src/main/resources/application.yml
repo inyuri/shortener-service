@@ -18,24 +18,19 @@ spring:
 
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      value-serializer: org.apache.kafka.common.serialization.ByteArraySerializer
 
     consumer:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-
+      value-deserializer: org.apache.kafka.common.serialization.ByteArrayDeserializer
       group-id: analytics-group
-
-      properties:
-        spring.json.trusted.packages: "com.timofey"
-        spring.json.use.type.headers: false
-        spring.json.value.default.type: "com.timofey.analytics_service.event.LinkClickedEvent"
+      auto-offset-reset: earliest
 
 
 kafka:
   topics:
     link-clicks: ${KAFKA_TOPIC_LINK_CLICKS:link-clicks}
-    link-clicks-dlt: link-clicks.DLT
+    link-clicks-dlt: ${KAFKA_TOPIC_LINK_CLICKS_DLT:${kafka.topics.link-clicks}.DLT}
 
 management:
   endpoints:

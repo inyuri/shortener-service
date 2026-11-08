@@ -13,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -33,7 +34,8 @@ class AnalyticsServiceTest {
 				"https://google.com",
 				LocalDateTime.now(),
 				"Chrome",
-				"test-correlation-id-1"
+				"test-correlation-id-1",
+				UUID.randomUUID()
 		);
 
 		analyticsService.process(event);
@@ -48,6 +50,7 @@ class AnalyticsServiceTest {
 		assertEquals("abc123", saved.getShortCode());
 		assertEquals("https://google.com", saved.getOriginalUrl());
 		assertEquals("test-correlation-id-1", saved.getCorrelationId());
+		assertEquals(event.eventId(), saved.getEventId());
 	}
 
 	@Test
@@ -57,7 +60,8 @@ class AnalyticsServiceTest {
 				"https://google.com",
 				LocalDateTime.now(),
 				"Chrome",
-				"test-correlation-id-2"
+				"test-correlation-id-2",
+				UUID.randomUUID()
 		);
 
 		LinkClickedEvent second = new LinkClickedEvent(
@@ -65,7 +69,8 @@ class AnalyticsServiceTest {
 				"https://google.com",
 				LocalDateTime.now(),
 				"Firefox",
-				"test-correlation-id-3"
+				"test-correlation-id-3",
+				UUID.randomUUID()
 		);
 
 		analyticsService.process(first);
