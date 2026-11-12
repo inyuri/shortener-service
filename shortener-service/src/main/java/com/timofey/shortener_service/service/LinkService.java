@@ -6,7 +6,9 @@ import com.timofey.shortener_service.event.LinkClickedEvent;
 import com.timofey.shortener_service.exception.LinkExpiredException;
 import com.timofey.shortener_service.exception.LinkNotFoundException;
 import com.timofey.shortener_service.model.Link;
+import com.timofey.shortener_service.model.OutboxEvent;
 import com.timofey.shortener_service.repository.LinkRepository;
+import com.timofey.shortener_service.repository.OutboxRepository;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,10 +16,11 @@ import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
+
+import tools.jackson.databind.json.JsonMapper;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -29,12 +32,10 @@ import java.util.UUID;
 public class LinkService {
 
     private final LinkRepository linkRepository;
-    private final KafkaTemplate<String, LinkClickedEvent> kafkaTemplate;
+    private final OutboxRepository outboxRepository;
     private final WebClient analyticsWebClient;
     private final MeterRegistry meterRegistry;
-
-    @Value("${kafka.topics.link-clicks}")
-    private String linkClickedTopic;
+    private final JsonMapper jsonMapper;
 
     @Value("${app.base-url:http://localhost:8080}")
     private String baseUrl;
@@ -66,7 +67,7 @@ public class LinkService {
 
     @Transactional
     public String redirect(String shortCode, String userAgent) {
-        Link link = linkRepository.getLinkByShortCode(shortCode)
+        Link link = linkRepository.findByShortCode(shortCode)
                 .orElseThrow(() -> new LinkNotFoundException("Link not found"));
 
         if (link.getExpiresAt() != null && link.getExpiresAt().isBefore(LocalDateTime.now())) {
@@ -79,8 +80,10 @@ public class LinkService {
         meterRegistry.counter("links.clicks").increment();
 
         String correlationId = MDC.get("correlationId");
+        UUID eventId = UUID.randomUUID();
 
         LinkClickedEvent event = new LinkClickedEvent(
+                eventId,
                 link.getShortCode(),
                 link.getOriginalUrl(),
                 LocalDateTime.now(),
@@ -88,12 +91,14 @@ public class LinkService {
                 correlationId
         );
 
-        kafkaTemplate.send(
-                linkClickedTopic,
+        outboxRepository.save(new OutboxEvent(
+                eventId,
+                "Link",
                 link.getShortCode(),
-                event
-        );
-        
+                "LinkClicked",
+                jsonMapper.writeValueAsString(event)
+        ));
+
         return link.getOriginalUrl();
     }
 
