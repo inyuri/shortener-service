@@ -22,6 +22,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import tools.jackson.databind.json.JsonMapper;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
@@ -147,6 +148,7 @@ public class LinkService {
                 .uri("/api/analytics/{shortCode}", shortCode)
                 .retrieve()
                 .bodyToMono(AnalyticsResponse.class)
+                .timeout(Duration.ofSeconds(10))
                 .onErrorReturn(
                         new AnalyticsResponse(
                                 shortCode,
